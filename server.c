@@ -4,112 +4,70 @@ Name            ID no.
 Name            ID no.*/
 
 #include <stdio.h>
-#include <sys/socket.h>
+#include <sys/types.h>	/* system type defintions */
+#include <sys/socket.h>	/* network system functions */
+#include <netinet/in.h>	/* protocol & struct definitions */
+#include <stdlib.h>	/* exit() warnings */
+#include <string.h>	/* memset warnings */
 #include <unistd.h>
-#include <stdlib.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <netdb.h>
-#include <sys/types.h>
-#define PORT 8080
-#define MAX 80
-#define SA struct sockaddr
 
-void func(int s)
-{
-    char buff[MAX];
-    int n;
+#define BUF_SIZE	1024
+#define LISTEN_PORT	60000
 
-    for(;;)
-    {
-        bzero(buff, MAX);
+int main(int argc, char *argv[]){
 
-        //Get message from client
-        read(s, buff, sizeof(buff));
-        
-        //Print Client message
-        printf("From client: %s\t To client: ",buff);
-        bzero(buff,MAX);
-        
-        n =0;
-        //Save server message
-        while ((buff[n++] = getchar()) != '\n')
-            ;
-        
-        //Send message to client
-        write(s,buff,sizeof(buff));
+    int	sock_listen,sock_recv;
+    struct sockaddr_in	my_addr,recv_addr;
+    int i,addr_size,bytes_received;
+    int	incoming_len;
+    struct sockaddr	remote_addr;
+    int	recv_msg_size;
+    char buf[BUF_SIZE];
 
-        if (strncmp("exit",buff,4) == 0){
-            printf("Exit Server \n");
-            break;
-        }
 
-    }
-}
-
-int main(int argc, char const *argv[])
-{
-    //Get server PORT from command line
-    /**
-    if (argc != 3)
-    {
-        printf('Please supply a server port');
-        exit()
-    }
-    */
-
-    printf("Spreadsheet Server \n");
-
-    int s, conn, len;
-    struct sockaddr_in servaddr, client;
-
-    //create socket
-    s = socket(AF_INET, SOCK_STREAM, 0);
-    if (s == -1)
-    {
-        printf("Could not create socket\n");
+            /* create socket for listening */
+    sock_listen=socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sock_listen < 0){
+        printf("socket() failed\n");
         exit(0);
     }
+        /* make local address structure */
+    memset(&my_addr, 0, sizeof (my_addr));	/* zero out structure */
+    my_addr.sin_family = AF_INET;	/* address family */
+    my_addr.sin_addr.s_addr = htonl(INADDR_ANY);  /* current machine IP */
+    my_addr.sin_port = htons((unsigned short)LISTEN_PORT);
 
-    printf("Socket Created\n");
-
-    bzero(&servaddr, sizeof(servaddr)); // not sure what this does
-
-    // assign HOST and PORT
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    servaddr.sin_port = htons(PORT);
-
-    //Bind socket
-    if ((bind(s, (SA*)&servaddr, sizeof(servaddr))) != 0)
-    {
-        printf("Socket Bind Failed \n");
+        /* bind socket to the local address */
+    i=bind(sock_listen, (struct sockaddr *) &my_addr, sizeof (my_addr));
+    if (i < 0){
+        printf("bind() failed\n");
         exit(0);
     }
-
-    printf("Socket Binded");
-
-    //Listen
-    if ((listen(s,5)) != 0)
-    {
-        printf("Listen Failed \n");
+    
+    
+        /* listen ... */
+    
+    i=listen(sock_listen, 5);
+    if (i < 0){
+        printf("listen() failed\n");
         exit(0);
     }
+     
+ 
+        /* get new socket to receive data on */
+        /* It extracts the first connection request from the  */
+        /* listening socket  */
+    addr_size=sizeof(recv_addr);
+    sock_recv=accept(sock_listen, (struct sockaddr *) &recv_addr, &addr_size);
 
-    printf("Socket now listening");
-
-    len = sizeof(client);
-
-    if (conn < 0){
-        printf("Accept Connection Failed");
-        exit(0);
+    while (1){
+        bytes_received=recv(sock_recv,buf,BUF_SIZE,0);
+        buf[bytes_received]=0;
+        printf("Received: %s\n",buf);
+    if (strcmp(buf,"shutdown") == 0)
+        break;
     }
 
-    printf("Connected by ");
-
-    func(conn);
-
-    close(s);
-    printf("Close connection socket");
-    return 0;
+    close(sock_recv);
+    close(sock_listen);
 }
