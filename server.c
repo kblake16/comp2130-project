@@ -23,17 +23,29 @@ int main(int argc, char *argv[])
     struct sockaddr	remote_addr;
     int	recv_msg_size;
     char buf[BUF_SIZE];
-    int const NUM_RANGE = 10;
+    int const NUM_RANGE = 9;
     int k,j;
 
     char * grid[NUM_RANGE][NUM_RANGE];
 
+    void getNewSpreadSheet()
+    {
+        for (j=0; j < NUM_RANGE; j++)
+        {
+            for (k=0; k < NUM_RANGE; k++)
+            {
+                grid[k][j]="   ";
+            }
+        }
+        return;
+    }
+
     void spreadSheet()
     {
         int num = 1;
-        char * const NLINE = "    A    B    C    D    E    F    G    H";
-        char * const HLINE = "  +----+----+----+----+----+----+----+----+";
-        char * const VLINE = num + "  |    |    |    |    |    |    |    |    |";
+        char * const NLINE = "    A    B    C    D    E    F    G    H    I";
+        char * const HLINE = "  +----+----+----+----+----+----+----+----+----+";
+        char * const VLINE = "  |    |    |    |    |    |    |    |    |    |";
 
         printf("%s\n",NLINE);
         printf("%s\n",HLINE);
@@ -103,6 +115,8 @@ int main(int argc, char *argv[])
     sock_recv=accept(sock_listen, (struct sockaddr *) &recv_addr, &addr_size);
 
     printf("Connected\n");
+
+    getNewSpreadSheet();
 
     while (1){
         spreadSheet();
