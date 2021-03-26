@@ -16,7 +16,7 @@ Name            ID no.*/
 
 int main(int argc, char *argv[])
 {
-    int	sock_listen,sock_recv;
+    int	sock_listen,sock_recv,send_len;
     struct sockaddr_in	my_addr,recv_addr;
     int i,addr_size,bytes_received;
     int	incoming_len;
@@ -25,6 +25,7 @@ int main(int argc, char *argv[])
     char buf[BUF_SIZE];
     int const NUM_RANGE = 9;
     int k,j;
+    char text[80];
 
     char * grid[NUM_RANGE][NUM_RANGE];
 
@@ -40,38 +41,71 @@ int main(int argc, char *argv[])
         return;
     }
 
-    void spreadSheet()
+    char * sheet = (char *) malloc(200);
+
+    char * spreadSheet()
     {
-        int num = 1;
+        char numS[3];
+        int numI = 0;
         char * const NLINE = "    A    B    C    D    E    F    G    H    I";
         char * const HLINE = "  +----+----+----+----+----+----+----+----+----+";
         char * const VLINE = "  |    |    |    |    |    |    |    |    |    |";
 
-        printf("%s\n",NLINE);
-        printf("%s\n",HLINE);
+        //printf("%s\n",NLINE);
+        strcpy(sheet,NLINE);
+        strcat(sheet,"\n");
+
+        //printf("%s\n",HLINE);
+        strcat(sheet,HLINE);
+        strcat(sheet,"\n");
+
         for (j = 0; j < NUM_RANGE; j++)
         {  
-            printf("%s\n",VLINE);
-            printf("%d ",j+1);
+            //printf("%s\n",VLINE);
+            strcat(sheet,VLINE);
+            strcat(sheet,"\n");
+
+            //printf("%d ",j+1);
+            printf("j: %d\n",j);
+            numI = j+1;
+            printf("Num: %d\n",numI);
+            sprintf(numS,"%d ",numI);
+            strcat(sheet,numS);
+
             for (k = 0; k < NUM_RANGE; k++)
-            {  if(strcmp(grid[k][j],"   ")==0)
+            {  
+                if(strcmp(grid[k][j],"   ") == 0)
                 {
-                    printf("| %s",grid[k][j]);
+                    //printf("| %s",grid[k][j]);
+                    strcat(sheet,"| ");
+                    strcat(sheet,grid[k][j]);
                 }
                 else
                 {
-                    printf("| %s  ",grid[k][j]);
+                    //printf("| %s  ",grid[k][j]);
+                    strcat(sheet,"| ");
+                    strcat(sheet,grid[k][j]);
+                    strcat(sheet,"  ");
                 }
             }
-            printf("%s","|");
-            printf("\n");
-            printf("%s\n",VLINE);
-            printf("%s\n",HLINE);
+            //printf("%s","|");
+            strcat(sheet,"|");
+
+            //printf("\n");
+            strcat(sheet,"\n");
+
+            //printf("%s\n",VLINE);
+            strcat(sheet,VLINE);
+            strcat(sheet,"\n");
+
+            //printf("%s\n",HLINE);
+            strcat(sheet,HLINE);
+            strcat(sheet,"\n");
         }
-        return;
+        return sheet;
     }
 
-    printf("Spreadsheet Server\n");
+    printf("SpreadSheet Server\n");
 
     /* create socket for listening */
     sock_listen=socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -119,12 +153,12 @@ int main(int argc, char *argv[])
     getNewSpreadSheet();
 
     while (1){
-        spreadSheet();
+        printf("%s",spreadSheet());
         bytes_received=recv(sock_recv,buf,BUF_SIZE,0);
         buf[bytes_received]=0;
         printf("Received: %s\n",buf);
-    if (strcmp(buf,"shutdown") == 0)
-        break;
+        if (strcmp(buf,"shutdown") == 0)
+            break;
     }
 
     close(sock_recv);
