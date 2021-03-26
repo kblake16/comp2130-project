@@ -41,12 +41,12 @@ int main(int argc, char *argv[])
         return;
     }
 
-    char * sheet = (char *) malloc(200);
+    char * sheet = (char *) malloc(1);
 
     char * spreadSheet()
     {
         char numS[3];
-        int numI = 0;
+        int numI;
         char * const NLINE = "    A    B    C    D    E    F    G    H    I";
         char * const HLINE = "  +----+----+----+----+----+----+----+----+----+";
         char * const VLINE = "  |    |    |    |    |    |    |    |    |    |";
@@ -66,9 +66,7 @@ int main(int argc, char *argv[])
             strcat(sheet,"\n");
 
             //printf("%d ",j+1);
-            printf("j: %d\n",j);
             numI = j+1;
-            printf("Num: %d\n",numI);
             sprintf(numS,"%d ",numI);
             strcat(sheet,numS);
 
@@ -160,7 +158,7 @@ int main(int argc, char *argv[])
         if (strcmp(buf,"shutdown") == 0)
             break;
     }
-
+    free(sheet);
     close(sock_recv);
     close(sock_listen);
 }
