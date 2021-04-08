@@ -14,7 +14,7 @@ Labu Beckford       620111107
 #include <unistd.h>
 #include <ctype.h>
 
-#define BUF_SIZE	1024
+#define BUF_SIZE	2048
 #define LISTEN_PORT	60000
 
 int main(int argc, char *argv[])
@@ -157,8 +157,8 @@ int main(int argc, char *argv[])
     while (1){
         //send
         text = spreadSheet();
-        send_len = strlen(text);
-        bytes_sent = send(sock_recv,text,send_len,0);
+        text += "/n Enter Cell";
+        bytes_sent = send(sock_recv,text,BUF_SIZE,0);
 
         //recieve
         bytes_received=recv(sock_recv,buf,BUF_SIZE,0);
@@ -176,6 +176,7 @@ int main(int argc, char *argv[])
         //function AVERAGE SUM RANGE
         //if ()
     }
+
     free(sheet);
     close(sock_recv);
     close(sock_listen);

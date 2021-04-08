@@ -16,7 +16,7 @@ Labu Beckford       620111107
 #include <unistd.h>
 
 
-#define BUF_SIZE	1024
+#define BUF_SIZE	2048
 #define	SERVER_IP	"127.0.0.1"
 #define SERVER_PORT	60000
 
@@ -60,7 +60,7 @@ int main(int argc, char *argv[]){
 
         strcpy(buf,text);
         send_len=strlen(text);
-        bytes_sent=send(sock_send,buf,send_len,0);
+        bytes_sent=send(sock_send,buf,BUF_SIZE,0);
     }
 
     close(sock_send);
