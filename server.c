@@ -28,17 +28,12 @@ int main(int argc, char *argv[])
     char buf[BUF_SIZE];
     int const NUM_RANGE = 9;
     int k,j;
-<<<<<<< HEAD
-    char text[80];
 
-    char * grid[NUM_RANGE][NUM_RANGE];
-=======
     char *text;
 
     char * func[3]= {"AVERAGE","SUM","RANGE"};
     char * grid[NUM_RANGE][NUM_RANGE];
     char letterVal[9][2] = {{'A','0'},{'B','1'},{'C','2'},{'D','3'},{'E','4'},{'F','5'},{'G','6'},{'H','7'},{'I','8'}};
->>>>>>> main
 
     void getNewSpreadSheet()
     {
@@ -106,25 +101,12 @@ int main(int argc, char *argv[])
             //printf("%s\n",VLINE);
             strcat(sheet,VLINE);
             strcat(sheet,"\n");
-<<<<<<< HEAD
-
             //printf("%s\n",HLINE);
             strcat(sheet,HLINE);
             strcat(sheet,"\n");
         }
         return sheet;
     }
-
-=======
-
-            //printf("%s\n",HLINE);
-            strcat(sheet,HLINE);
-            strcat(sheet,"\n");
-        }
-        return sheet;
-    }
-
->>>>>>> main
     printf("SpreadSheet Server\n");
 
     /* create socket for listening */
@@ -173,25 +155,18 @@ int main(int argc, char *argv[])
     getNewSpreadSheet();
 
     while (1){
-<<<<<<< HEAD
-        printf("%s",spreadSheet());
-=======
         //send
         text = spreadSheet();
         send_len = strlen(text);
         bytes_sent = send(sock_recv,text,send_len,0);
 
         //recieve
->>>>>>> main
         bytes_received=recv(sock_recv,buf,BUF_SIZE,0);
         buf[bytes_received]=0;
         printf("Received: %s\n",buf);
         if (strcmp(buf,"shutdown") == 0)
             break;
-<<<<<<< HEAD
-    }
-=======
-        
+
         //alpha numeric
         printf("Buf len");
         if (strlen(buf)==2 && isalpha(buf[0]) && isalnum(buf[1] && !(isalpha(buf[1]))))
@@ -200,10 +175,7 @@ int main(int argc, char *argv[])
 
         //function AVERAGE SUM RANGE
         //if ()
-
     }
-
->>>>>>> main
     free(sheet);
     close(sock_recv);
     close(sock_listen);
