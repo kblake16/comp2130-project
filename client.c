@@ -1,7 +1,10 @@
-/**Group Members:
-Kayla Blake     620096888
-Name            ID no.
-Name            ID no.*/
+/**
+Group Members:
+Kayla Blake         620096888
+Antoneel Thompson   620122831
+Labu Beckford       620111107
+*/
+
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -22,7 +25,7 @@ int main(int argc, char *argv[]){
     struct sockaddr_in	addr_send;
     int	i;
     char text[80],buf[BUF_SIZE];
-    int	send_len,bytes_sent;
+    int	send_len,bytes_sent, bytes_received;
 
         /* create socket for sending data */
     sock_send=socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -45,6 +48,10 @@ int main(int argc, char *argv[]){
     }
 
     while (1){
+        bytes_received=recv(sock_send,buf,BUF_SIZE,0);
+        buf[bytes_received]=0;
+        printf("Received:\n %s\n",buf);
+
         /* send some data */
         printf("Send? ");
         scanf("%s",text);
