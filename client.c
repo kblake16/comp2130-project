@@ -18,7 +18,7 @@ Labu Beckford       620111107
 
 #define BUF_SIZE	2048
 #define	SERVER_IP	"127.0.0.1"
-#define SERVER_PORT	60000
+#define SERVER_PORT	60001
 
 int main(int argc, char *argv[]){
     int	sock_send;
@@ -47,6 +47,9 @@ int main(int argc, char *argv[]){
         exit(0);
     }
 
+    strcpy(buf,"connected");
+        bytes_sent=send(sock_send,buf,BUF_SIZE,0);
+
     while (1){
         bytes_received=recv(sock_send,buf,BUF_SIZE,0);
         buf[bytes_received]=0;
@@ -59,7 +62,6 @@ int main(int argc, char *argv[]){
             break;
 
         strcpy(buf,text);
-        send_len=strlen(text);
         bytes_sent=send(sock_send,buf,BUF_SIZE,0);
     }
 

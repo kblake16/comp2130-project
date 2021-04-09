@@ -15,7 +15,7 @@ Labu Beckford       620111107
 #include <ctype.h>
 
 #define BUF_SIZE	2048
-#define LISTEN_PORT	60000
+#define LISTEN_PORT	60001
 
 int main(int argc, char *argv[])
 {
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 
     char * func[3]= {"AVERAGE","SUM","RANGE"};
     char * grid[NUM_RANGE][NUM_RANGE];
-    char letterVal[9][2] = {{'A','0'},{'B','1'},{'C','2'},{'D','3'},{'E','4'},{'F','5'},{'G','6'},{'H','7'},{'I','8'}};
+    char letterVal[9][2] = {{'A','1'},{'B','2'},{'C','3'},{'D','4'},{'E','5'},{'F','6'},{'G','7'},{'H','8'},{'I','9'}};
 
     void getNewSpreadSheet()
     {
@@ -57,21 +57,17 @@ int main(int argc, char *argv[])
         char * const HLINE = "  +----+----+----+----+----+----+----+----+----+";
         char * const VLINE = "  |    |    |    |    |    |    |    |    |    |";
 
-        //printf("%s\n",NLINE);
         strcpy(sheet,NLINE);
         strcat(sheet,"\n");
 
-        //printf("%s\n",HLINE);
         strcat(sheet,HLINE);
         strcat(sheet,"\n");
 
         for (j = 0; j < NUM_RANGE; j++)
         {  
-            //printf("%s\n",VLINE);
             strcat(sheet,VLINE);
             strcat(sheet,"\n");
 
-            //printf("%d ",j+1);
             numI = j+1;
             sprintf(numS,"%d ",numI);
             strcat(sheet,numS);
@@ -80,33 +76,56 @@ int main(int argc, char *argv[])
             {  
                 if(strcmp(grid[k][j],"   ") == 0)
                 {
-                    //printf("| %s",grid[k][j]);
                     strcat(sheet,"| ");
                     strcat(sheet,grid[k][j]);
                 }
                 else
                 {
-                    //printf("| %s  ",grid[k][j]);
                     strcat(sheet,"| ");
                     strcat(sheet,grid[k][j]);
                     strcat(sheet,"  ");
                 }
             }
-            //printf("%s","|");
             strcat(sheet,"|");
 
-            //printf("\n");
             strcat(sheet,"\n");
 
-            //printf("%s\n",VLINE);
             strcat(sheet,VLINE);
             strcat(sheet,"\n");
-            //printf("%s\n",HLINE);
+
             strcat(sheet,HLINE);
             strcat(sheet,"\n");
         }
         return sheet;
     }
+
+    void placeOnSheet(int x, int y, char* c)
+    {
+        grid[x-1][y-1] = c;
+        return;
+    }
+
+    int getLetterInt(char c)
+    {
+        int num;
+        char cUp = toupper(c);
+        for(int i = 0; i < 9; i++)
+        {
+            if(letterVal[i][0] == cUp)
+            {
+                num = letterVal[i][1] - '0';
+            }
+        }
+        return num;
+    }
+
+    // check if sell contains number or text
+    void checkCell(int x, int y)
+    {
+        return;
+    }
+
+
     printf("SpreadSheet Server\n");
 
     /* create socket for listening */
@@ -153,26 +172,52 @@ int main(int argc, char *argv[])
     printf("Connected\n");
 
     getNewSpreadSheet();
-
+    char option[] = "\nEnter Cell to edit eg. a1\n";
     while (1){
-        //send
-        text = spreadSheet();
-        text += "/n Enter Cell";
-        bytes_sent = send(sock_recv,text,BUF_SIZE,0);
-
         //recieve
         bytes_received=recv(sock_recv,buf,BUF_SIZE,0);
         buf[bytes_received]=0;
-        printf("Received: %s\n",buf);
+
         if (strcmp(buf,"shutdown") == 0)
+        {
             break;
+        }
+        else if(strcmp(buf,"connected"))
+        {
+            text = spreadSheet();
+            strcat(text,option);
+            bytes_sent = send(sock_recv,text,BUF_SIZE,0);
+        }
+        else if (strlen(buf) == 2 )
+        {
+            char cellLet = buf[0];
+            char cellNum = buf[1];
 
-        //alpha numeric
-        printf("Buf len");
-        if (strlen(buf)==2 && isalpha(buf[0]) && isalnum(buf[1] && !(isalpha(buf[1]))))
-            //then enter value
-            printf("Cell: %s\n",buf);
-
+            if(isalpha(cellLet) != 0 && isalnum(cellNum) != 0 && isalpha(cellNum) == 0)
+            {
+                int num = cellNum - '0';
+                placeOnSheet(getLetterInt(cellLet),num,"T");
+                printf("Cell: %c num: %d\n",cellLet,num);
+                char * msg ="Enter value for cell [";
+                strcat(msg,buf);
+                strcat(msg,"]:\n");
+                bytes_sent = send(sock_recv,msg,BUF_SIZE,0);
+            }
+            else
+            {
+                printf("Not Cell: %s\n",buf);
+                text = spreadSheet();
+                strcat(text,option);
+                bytes_sent = send(sock_recv,text,BUF_SIZE,0);
+            }
+        }
+        else
+        {
+            printf("Received: %s\n",buf);
+            text = spreadSheet();
+            strcat(text,option);
+            bytes_sent = send(sock_recv,text,BUF_SIZE,0);
+        }
         //function AVERAGE SUM RANGE
         //if ()
     }
