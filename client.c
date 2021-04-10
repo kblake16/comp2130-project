@@ -18,7 +18,7 @@ Labu Beckford       620111107
 
 #define BUF_SIZE	2048
 #define	SERVER_IP	"127.0.0.1"
-#define SERVER_PORT	60001
+#define SERVER_PORT	60000
 
 int main(int argc, char *argv[]){
     int	sock_send;
@@ -26,6 +26,45 @@ int main(int argc, char *argv[]){
     int	i;
     char text[80],buf[BUF_SIZE];
     int	send_len,bytes_sent, bytes_received;
+    int status;
+
+    //Create Message
+    char * option(char op[BUF_SIZE])
+    {
+        strcat(op,"!115");
+        return op;
+    }
+
+    char * value(char * cell, char * val)
+    {
+        strcat(cell,":");
+        strcat(cell,val);
+        strcat(cell,"!150");
+
+        return cell;
+    }
+
+    void processMessage(int s, char msg[BUF_SIZE])
+    {
+        if (strstr(msg,"quit"))
+        {
+            status = -1;
+        }
+        if(strstr(msg,"105"))
+        {
+            printf("%s",strtok(msg,"!"));
+            printf("\nSend? ");
+            scanf("%s",msg);
+            bytes_sent=send(s,option(msg),BUF_SIZE,0);
+        }
+        if(strstr(msg,"125"))
+        {
+            printf("%s",strtok(msg,"!"));
+            printf("\nSend? ");
+            scanf("%s",text);
+            bytes_sent=send(s,value(strtok(msg,":"),text),BUF_SIZE,0);
+        }
+    }
 
         /* create socket for sending data */
     sock_send=socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -47,22 +86,17 @@ int main(int argc, char *argv[]){
         exit(0);
     }
 
-    strcpy(buf,"connected");
+    strcpy(buf,"connected!100");
         bytes_sent=send(sock_send,buf,BUF_SIZE,0);
 
-    while (1){
+    status = 1;
+    while (status == 1)
+    {
         bytes_received=recv(sock_send,buf,BUF_SIZE,0);
         buf[bytes_received]=0;
-        printf("Received:\n %s\n",buf);
 
-        /* send some data */
-        printf("Send? ");
-        scanf("%s",text);
-        if (strcmp(text,"quit") == 0)
-            break;
+        processMessage(sock_send,buf);
 
-        strcpy(buf,text);
-        bytes_sent=send(sock_send,buf,BUF_SIZE,0);
     }
 
     close(sock_send);

@@ -15,7 +15,7 @@ Labu Beckford       620111107
 #include <ctype.h>
 
 #define BUF_SIZE	2048
-#define LISTEN_PORT	60001
+#define LISTEN_PORT	60000
 
 int main(int argc, char *argv[])
 {
@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
     char buf[BUF_SIZE];
     int const NUM_RANGE = 9;
     int k,j;
+    int status;
 
     char *text;
 
@@ -119,6 +120,19 @@ int main(int argc, char *argv[])
         return num;
     }
 
+    //Create Messages
+    char * menu()
+    {
+        char * send = "\nEnter a Cell Example:a1 [Type 'shutdown' at any time to quit]!105";
+        return send;
+    }
+
+    char * value(char* cell)
+    {
+        strcat(cell,":Enter the value!125");
+        return cell;
+    }
+
     // check if sell contains number or text
     void checkCell(int x, int y)
     {
@@ -171,55 +185,64 @@ int main(int argc, char *argv[])
 
     printf("Connected\n");
 
-    getNewSpreadSheet();
-    char option[] = "\nEnter Cell to edit eg. a1\n";
-    while (1){
-        //recieve
-        bytes_received=recv(sock_recv,buf,BUF_SIZE,0);
-        buf[bytes_received]=0;
-
-        if (strcmp(buf,"shutdown") == 0)
+    void processMessage(int s, char msg[BUF_SIZE])
+    {
+         if (strstr(msg,"shutdown"))
         {
-            break;
+            bytes_sent = send(s,"quit",BUF_SIZE,0);
+            status = -1;
         }
-        else if(strcmp(buf,"connected"))
+        else if(strstr(msg,"100"))
         {
-            text = spreadSheet();
-            strcat(text,option);
-            bytes_sent = send(sock_recv,text,BUF_SIZE,0);
+            msg = spreadSheet();
+            strcat(msg,menu());
+            bytes_sent = send(s,msg,BUF_SIZE,0);
         }
-        else if (strlen(buf) == 2 )
+        else if(strstr(msg,"115"))
         {
-            char cellLet = buf[0];
-            char cellNum = buf[1];
+            strcpy(msg,strtok(msg,"!"));
 
-            if(isalpha(cellLet) != 0 && isalnum(cellNum) != 0 && isalpha(cellNum) == 0)
+            char cellLet = msg[0];
+            char cellNum = msg[1];
+
+            if(strlen(msg) == 2 && isalpha(cellLet) != 0 && isalnum(cellNum) != 0 && isalpha(cellNum) == 0)
             {
                 int num = cellNum - '0';
-                placeOnSheet(getLetterInt(cellLet),num,"T");
+                //placeOnSheet(getLetterInt(cellLet),num,"T");
                 printf("Cell: %c num: %d\n",cellLet,num);
-                char * msg ="Enter value for cell [";
-                strcat(msg,buf);
-                strcat(msg,"]:\n");
-                bytes_sent = send(sock_recv,msg,BUF_SIZE,0);
+                msg = value(msg);
+                bytes_sent = send(s,msg,BUF_SIZE,0);
             }
             else
             {
-                printf("Not Cell: %s\n",buf);
-                text = spreadSheet();
-                strcat(text,option);
-                bytes_sent = send(sock_recv,text,BUF_SIZE,0);
+                printf("Not Cell: %s\n",msg);
+                msg = "Enter a cell range on the spread sheet!105";
+                bytes_sent = send(s,msg,BUF_SIZE,0);
             }
+        }
+        else if(strstr(msg,"150"))
+        {
+            strcpy(msg,strtok(msg,"!"));
+            printf("Val: %s",msg);
         }
         else
         {
             printf("Received: %s\n",buf);
-            text = spreadSheet();
-            strcat(text,option);
-            bytes_sent = send(sock_recv,text,BUF_SIZE,0);
+            msg = spreadSheet();
+            strcat(msg,menu());
+            bytes_sent = send(s,msg,BUF_SIZE,0);
         }
-        //function AVERAGE SUM RANGE
-        //if ()
+    }
+
+    getNewSpreadSheet();
+    status = 1;
+
+    while (status == 1){
+        //recieve
+        bytes_received=recv(sock_recv,buf,BUF_SIZE,0);
+        buf[bytes_received]=0;
+
+        processMessage(sock_recv,buf);
     }
 
     free(sheet);
