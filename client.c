@@ -16,7 +16,7 @@ Labu Beckford       620111107
 #include <unistd.h>
 
 
-#define BUF_SIZE	1024
+#define BUF_SIZE	2048
 #define	SERVER_IP	"127.0.0.1"
 #define SERVER_PORT	60000
 

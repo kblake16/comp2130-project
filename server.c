@@ -13,6 +13,7 @@ Labu Beckford       620111107
 #include <string.h>	/* memset warnings */
 #include <unistd.h>
 #include <ctype.h>
+#include <pthread.h> /*Should be linked with lpthread*/
 
 #define BUF_SIZE	1024
 #define LISTEN_PORT	60000
@@ -25,6 +26,7 @@ int main(int argc, char *argv[])
     int	incoming_len;
     struct sockaddr	remote_addr;
     int	recv_msg_size;
+    int shutdown;
     char buf[BUF_SIZE];
     int const NUM_RANGE = 9;
     int k,j;
@@ -33,6 +35,8 @@ int main(int argc, char *argv[])
     char * func[3]= {"AVERAGE","SUM","RANGE"};
     char * grid[NUM_RANGE][NUM_RANGE];
     char letterVal[9][2] = {{'A','0'},{'B','1'},{'C','2'},{'D','3'},{'E','4'},{'F','5'},{'G','6'},{'H','7'},{'I','8'}};
+    
+    
 
     void getNewSpreadSheet()
     {
@@ -46,10 +50,11 @@ int main(int argc, char *argv[])
         return;
     }
 
-    char * sheet = (char *) malloc(1);
+    //char * sheet = (char *) malloc(1);
 
     char * spreadSheet()
     {
+        static char sheet[2000];
         char numS[3];
         int numI;
         char * const NLINE = "    A    B    C    D    E    F    G    H    I";
@@ -105,8 +110,46 @@ int main(int argc, char *argv[])
             strcat(sheet,HLINE);
             strcat(sheet,"\n");
         }
+        
         return sheet;
     }
+    
+        
+    //function to handle connection between the sever and client
+    void * handleConnection(void * pclient){
+    
+    	int client= *((int*)pclient);
+		free(pclient);
+    
+    	while (1){
+        //send
+        text = spreadSheet();
+        send_len = strlen(text);
+        bytes_sent = send(sock_recv,text,send_len,0);
+
+        //recieve
+        bytes_received=recv(sock_recv,buf,BUF_SIZE,0);
+        buf[bytes_received]=0;
+        printf("Received: %s\n",buf);
+        if (strcmp(buf,"shutdown") == 0){
+			shutdown = 1;
+            break;
+        }
+        
+        //alpha numeric
+        printf("Buf len");
+        if (strlen(buf)==2 && isalpha(buf[0]) && isalnum(buf[1] && !(isalpha(buf[1]))))
+            //then enter value
+            printf("Cell: %s\n",buf);
+
+        //function AVERAGE SUM RANGE
+        //if ()
+        
+		}
+        
+        close(sock_recv);
+    
+    } 
 
     printf("SpreadSheet Server\n");
 
@@ -145,41 +188,37 @@ int main(int argc, char *argv[])
     
     printf("Socket now listening...\n");
 
-    /* get new socket to receive data on */
-    /* It extracts the first connection request from the  */
-    /* listening socket  */
-    addr_size=sizeof(recv_addr);
-    sock_recv=accept(sock_listen, (struct sockaddr *) &recv_addr, &addr_size);
-
-    printf("Connected\n");
-
     getNewSpreadSheet();
+    shutdown =0;
 
     while (1){
-        //send
-        text = spreadSheet();
-        send_len = strlen(text);
-        bytes_sent = send(sock_recv,text,send_len,0);
-
-        //recieve
-        bytes_received=recv(sock_recv,buf,BUF_SIZE,0);
-        buf[bytes_received]=0;
-        printf("Received: %s\n",buf);
-        if (strcmp(buf,"shutdown") == 0)
-            break;
-        
-        //alpha numeric
-        printf("Buf len");
-        if (strlen(buf)==2 && isalpha(buf[0]) && isalnum(buf[1] && !(isalpha(buf[1]))))
-            //then enter value
-            printf("Cell: %s\n",buf);
-
-        //function AVERAGE SUM RANGE
-        //if ()
+		/* get new socket to receive data on */
+		/* It extracts the first connection request from the  */
+		/* listening socket  */
+		//Connecting 
+        printf("Waiting for connection\n");
+		addr_size=sizeof(recv_addr);
+		sock_recv=accept(sock_listen, (struct sockaddr *) &recv_addr, &addr_size);
+		if (recv<0){
+			printf("connection failed");
+			exit(0);
+		}
+	
+		printf("Connected\n");
+			
+		//use of thread to allow for mutliclient
+		pthread_t t;
+		int *pclient = malloc(sizeof(int));
+		*pclient = sock_recv;
+		pthread_create(&t,NULL,handleConnection,pclient);
+		
+		if (shutdown != 0)
+			break;
 
     }
+    
 
-    free(sheet);
+    //free(sheet);
     close(sock_recv);
     close(sock_listen);
 }
