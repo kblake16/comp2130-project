@@ -16,7 +16,7 @@ Labu Beckford       620111107
 #include <pthread.h>
 
 #define BUF_SIZE	2048
-#define LISTEN_PORT	60000
+#define LISTEN_PORT	60001
 
 int main(int argc, char *argv[])
 {
@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 
     char * func[3]= {"AVERAGE","SUM","RANGE"};
     char * grid[NUM_RANGE][NUM_RANGE];
-    char letterVal[9][2] = {{'A','1'},{'B','2'},{'C','3'},{'D','4'},{'E','5'},{'F','6'},{'G','7'},{'H','8'},{'I','9'}};
+    char letterVal[10][2] = {{'1','1'},{'A','1'},{'B','2'},{'C','3'},{'D','4'},{'E','5'},{'F','6'},{'G','7'},{'H','8'},{'I','9'}};
 
     void getNewSpreadSheet()
     {
@@ -109,16 +109,46 @@ int main(int argc, char *argv[])
 
     int getLetterInt(char c)
     {
-        int num;
+        int num,i;
         char cUp = toupper(c);
-        for(int i = 0; i < 9; i++)
+        printf("Char %c",c);
+        printf("Char Upper %c",cUp);
+        for(i = 0; i < 10; i++)
         {
+
+            printf("Value: %c", letterVal[i][0]);
             if(letterVal[i][0] == cUp)
             {
                 num = letterVal[i][1] - '0';
             }
         }
         return num;
+    }
+
+    int checkInput(char * c)
+    {
+        char cellLet = c[0];
+        char cellNum = c[1];
+
+        int check = 1;
+
+        if(strlen(c) == 2 && isalpha(cellLet) != 0 && isalnum(cellNum) != 0 && isalpha(cellNum) == 0)
+        {
+            int num1 = getLetterInt(cellLet);
+            printf("Cell number: %d", num1);
+            int num2 = cellNum -'0';
+            if(num1 <= 9 && num2 <= 9 && num1 >= 1 && num2 >= 1)
+            {
+                check = 0;
+            }
+        }
+
+        return check;
+    }
+
+    void checkCell(int x, int y)
+    {
+        return;
     }
 
     //Create Messages
@@ -130,15 +160,15 @@ int main(int argc, char *argv[])
 
     char * value(char* cell)
     {
-        strcat(cell,":Enter the value!125");
+        strcat(cell,":Funtion\n");
+        strcat(cell,"=AVERAGE(cell1,cell2) - returns the average value from cell1 to cell2\n");
+        strcat(cell,"=SUM(cell1,cell2) - returns the cumulative total fri cell1 to cell2\n");
+        strcat(cell,"=RANGE(cell1,cell2) - return the difference between the largest and in the smallest value from cell1 to cell2\n");
+        strcat(cell,"**NB Functions must be typed in all caps\n");
+        strcat(cell,"Enter a text, value or function!125");
         return cell;
     }
 
-    // check if sell contains number or text
-    void checkCell(int x, int y)
-    {
-        return;
-    }
 
 
     printf("SpreadSheet Server\n");
@@ -183,6 +213,7 @@ int main(int argc, char *argv[])
          if (strstr(msg,"shutdown"))
         {
             bytes_sent = send(s,"!quit",BUF_SIZE,0);
+            pthread_exit(NULL);
             status = -1;
         }
         else if(strstr(msg,"!100"))
@@ -195,14 +226,9 @@ int main(int argc, char *argv[])
         {
             strcpy(msg,strtok(msg,"!"));
 
-            char cellLet = msg[0];
-            char cellNum = msg[1];
-
-            if(strlen(msg) == 2 && isalpha(cellLet) != 0 && isalnum(cellNum) != 0 && isalpha(cellNum) == 0)
+            if( checkInput(msg) == 0)
             {
-                int num = cellNum - '0';
-                //placeOnSheet(getLetterInt(cellLet),num,"T");
-                printf("Cell: %c num: %d\n",cellLet,num);
+                printf("Cell: %s\n", msg);
                 msg = value(msg);
                 bytes_sent = send(s,msg,BUF_SIZE,0);
             }
@@ -217,6 +243,32 @@ int main(int argc, char *argv[])
         {
             strcpy(msg,strtok(msg,"!"));
             printf("Val: %s",msg);
+
+            char * cell = strtok(msg,":");
+
+            if(strstr(msg,"=AVERAGE("))
+            {
+                
+            }
+            else if(strstr(msg,"=SUM("))
+            {
+
+            }
+            else if(strstr(msg,"=RANGE("))
+            {
+
+            }
+            else if(isalnum(msg) != 0 && isalpha(msg) == 0)
+            {
+
+            }
+            else
+            {
+                printf("Not Value: %s\n",msg);
+                strcpy(msg,cell);
+                strcat(msg,":Enter a text, value or function!125");
+                bytes_sent = send(s,msg,BUF_SIZE,0);
+            }
         }
         else
         {
@@ -232,20 +284,19 @@ int main(int argc, char *argv[])
     	int client= *((int*)pclient);
 		free(pclient);
     
-        while (1)
+        while (status == 1)
         {
-            bytes_received=recv(sock_recv,buf,BUF_SIZE,0);
+            bytes_received=recv(client,buf,BUF_SIZE,0);
             buf[bytes_received]=0;
 
-            processMessage(sock_recv,buf);
+            processMessage(client,buf);
         }
-        
-        close(sock_recv);
     } 
 
     getNewSpreadSheet();
 
     while (1){
+
 		/* get new socket to receive data on */
 		/* It extracts the first connection request from the  */
 		/* listening socket  */
@@ -255,7 +306,6 @@ int main(int argc, char *argv[])
 		sock_recv=accept(sock_listen, (struct sockaddr *) &recv_addr, &addr_size);
 		if (recv<0){
 			printf("connection failed");
-			exit(0);
 		}
 
         printf("Connected\n");

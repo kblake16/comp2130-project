@@ -18,7 +18,7 @@ Labu Beckford       620111107
 
 #define BUF_SIZE	2048
 #define	SERVER_IP	"127.0.0.1"
-#define SERVER_PORT	60000
+#define SERVER_PORT	60001
 
 int main(int argc, char *argv[]){
     int	sock_send;
