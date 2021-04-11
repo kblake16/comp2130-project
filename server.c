@@ -109,14 +109,11 @@ int main(int argc, char *argv[])
 
     int getLetterInt(char c)
     {
-        int num,i;
+        int num;
         char cUp = toupper(c);
-        printf("Char %c",c);
-        printf("Char Upper %c",cUp);
-        for(i = 0; i < 10; i++)
+    
+        for(int i = 0; i < 10; i++)
         {
-
-            printf("Value: %c", letterVal[i][0]);
             if(letterVal[i][0] == cUp)
             {
                 num = letterVal[i][1] - '0';
@@ -135,7 +132,6 @@ int main(int argc, char *argv[])
         if(strlen(c) == 2 && isalpha(cellLet) != 0 && isalnum(cellNum) != 0 && isalpha(cellNum) == 0)
         {
             int num1 = getLetterInt(cellLet);
-            printf("Cell number: %d", num1);
             int num2 = cellNum -'0';
             if(num1 <= 9 && num2 <= 9 && num1 >= 1 && num2 >= 1)
             {
@@ -146,9 +142,52 @@ int main(int argc, char *argv[])
         return check;
     }
 
-    void checkCell(int x, int y)
+    int checkDirection(int x1, int y1, int x2, int y2)
     {
-        return;
+        int num = 1;
+
+        if((x1 < x2 || x2 < x1) && y1 == y2)
+        {
+            num = 0;
+        }
+        else if (x1 == x2 && (y1 < y2 || y2 < y1))
+        {
+            num = 0;
+        }
+        return num;
+    }
+
+
+    // check if sell contains an integer
+    int checkCell(int x, int y)
+    {
+        int num = 1;
+
+        if (isalnum(grid[x][y]) != 0 && isalpha(grid[x][y]) == 0)
+        {
+            num = 0;
+        }
+
+        return num;
+    }
+
+    int average(int x1, int y1, int x2 , int y2)
+    {
+        int count = 0;
+        int avg = 0;
+
+        for (j = 0; j < NUM_RANGE; j++)
+        {
+            for (k = 0; k < NUM_RANGE; k++)
+            {
+                if (checkCell(j,k) == 0 )
+                {
+                    
+                }
+            }
+        }
+
+        return avg;
     }
 
     //Create Messages
@@ -212,7 +251,7 @@ int main(int argc, char *argv[])
     {
          if (strstr(msg,"shutdown"))
         {
-            bytes_sent = send(s,"!quit",BUF_SIZE,0);
+            bytes_sent = send(s,"quit",BUF_SIZE,0);
             pthread_exit(NULL);
             status = -1;
         }
@@ -226,7 +265,7 @@ int main(int argc, char *argv[])
         {
             strcpy(msg,strtok(msg,"!"));
 
-            if( checkInput(msg) == 0)
+            if(checkInput(msg) == 0)
             {
                 printf("Cell: %s\n", msg);
                 msg = value(msg);
@@ -241,13 +280,76 @@ int main(int argc, char *argv[])
         }
         else if(strstr(msg,"!150"))
         {
-            strcpy(msg,strtok(msg,"!"));
-            printf("Val: %s",msg);
+            strtok(msg,"!");
+            //printf("Val: %s",msg);
 
-            char * cell = strtok(msg,":");
+            char tempMsg[100];
+
+            strcpy(tempMsg,msg);
+
+            char * cell = strtok(tempMsg,":");
+            int let = getLetterInt(cell[0]);
+            int num = cell[1] - '0';
+
+            
+            char temp[100];
+            int count = 0;
+
+            for(int i = 3; msg[i] != '\0'; i++)
+            {
+                temp[count] = msg[i];
+                count++;
+            }
+
+            printf("Msg: %s Cell: %s",temp,cell);
 
             if(strstr(msg,"=AVERAGE("))
             {
+                char * temp = strtok(msg,",");
+                char * get;
+
+                /*
+                //get first cell
+                sprintf(get,"%c",temp[-2]);
+                char * r1;
+                strcpy(r1,get);
+                sprintf(get,"%c",temp[-1]);
+                strcat(r1,get);
+                
+                //get second cell
+                temp = strtok(msg,")");
+                sprintf(get,"%c",temp[-2]);
+                char * r2;
+                strcpy(r2,get);
+                sprintf(get,"%c",temp[-1]);
+                strcat(r2,get);
+                */
+                
+                /*char * cells[] = splitFunction(msg);
+                char * r1,r2; 
+                strcpy(r1,cells[0]);
+                strcpy(r2,cells[1]);*/
+
+                char * r1 = "a1";
+                char * r2 = "a2";
+
+                //printf("R1: %s R2: %s",r1,r2);
+
+                if (checkDirection(getLetterInt(r1[0]),r1[1]-'0',getLetterInt(r2[0]), r2[1]-'0') == 0)
+                {
+                    printf("Correct direction");
+                    placeOnSheet(let,num,"a");
+                    msg = spreadSheet();
+                    strcat(msg,menu());
+                    bytes_sent = send(s,msg,BUF_SIZE,0);
+                }
+                else
+                {
+                    printf("Not Value: %s\n",msg);
+                    strcpy(msg,cell);
+                    strcat(msg,":[VALUE ERROR] ReEnter a text, value or function!125");
+                    bytes_sent = send(s,msg,BUF_SIZE,0);
+                }
                 
             }
             else if(strstr(msg,"=SUM("))
@@ -258,15 +360,11 @@ int main(int argc, char *argv[])
             {
 
             }
-            else if(isalnum(msg) != 0 && isalpha(msg) == 0)
-            {
-
-            }
             else
             {
-                printf("Not Value: %s\n",msg);
-                strcpy(msg,cell);
-                strcat(msg,":Enter a text, value or function!125");
+                placeOnSheet(let,num,temp);
+                msg = spreadSheet();
+                strcat(msg,menu());
                 bytes_sent = send(s,msg,BUF_SIZE,0);
             }
         }
