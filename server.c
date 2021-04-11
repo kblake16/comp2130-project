@@ -13,9 +13,10 @@ Labu Beckford       620111107
 #include <string.h>	/* memset warnings */
 #include <unistd.h>
 #include <ctype.h>
+#include <pthread.h>
 
 #define BUF_SIZE	2048
-#define LISTEN_PORT	60020
+#define LISTEN_PORT	60000
 
 int main(int argc, char *argv[])
 {
@@ -28,7 +29,7 @@ int main(int argc, char *argv[])
     char buf[BUF_SIZE];
     int const NUM_RANGE = 9;
     int k,j;
-    int status;
+    int status = 1;
 
     char *text;
 
@@ -48,12 +49,12 @@ int main(int argc, char *argv[])
         return;
     }
 
-    char * sheet = (char *) malloc(1);
 
     char * spreadSheet()
     {
         char numS[3];
         int numI;
+        static char sheet[BUF_SIZE];
         char * const NLINE = "    A    B    C    D    E    F    G    H    I";
         char * const HLINE = "  +----+----+----+----+----+----+----+----+----+";
         char * const VLINE = "  |    |    |    |    |    |    |    |    |    |";
@@ -177,14 +178,6 @@ int main(int argc, char *argv[])
     
     printf("Socket now listening...\n");
 
-    /* get new socket to receive data on */
-    /* It extracts the first connection request from the  */
-    /* listening socket  */
-    addr_size=sizeof(recv_addr);
-    sock_recv=accept(sock_listen, (struct sockaddr *) &recv_addr, &addr_size);
-
-    printf("Connected\n");
-
     void processMessage(int s, char msg[BUF_SIZE])
     {
          if (strstr(msg,"shutdown"))
@@ -234,18 +227,47 @@ int main(int argc, char *argv[])
         }
     }
 
+    void * handleConnection(void * pclient){
+    
+    	int client= *((int*)pclient);
+		free(pclient);
+    
+        while (1)
+        {
+            bytes_received=recv(sock_recv,buf,BUF_SIZE,0);
+            buf[bytes_received]=0;
+
+            processMessage(sock_recv,buf);
+        }
+        
+        close(sock_recv);
+    } 
+
     getNewSpreadSheet();
-    status = 1;
 
-    while (status == 1){
-        //recieve
-        bytes_received=recv(sock_recv,buf,BUF_SIZE,0);
-        buf[bytes_received]=0;
+    while (1){
+		/* get new socket to receive data on */
+		/* It extracts the first connection request from the  */
+		/* listening socket  */
+		//Connecting 
+        printf("Waiting for connection\n");
+		addr_size=sizeof(recv_addr);
+		sock_recv=accept(sock_listen, (struct sockaddr *) &recv_addr, &addr_size);
+		if (recv<0){
+			printf("connection failed");
+			exit(0);
+		}
 
-        processMessage(sock_recv,buf);
+        printf("Connected\n");
+			
+		//use of thread to allow for mutliclient
+		pthread_t t;
+		int *pclient = malloc(sizeof(int));
+		*pclient = sock_recv;
+		pthread_create(&t,NULL,handleConnection,pclient);
+
     }
 
-    free(sheet);
     close(sock_recv);
     close(sock_listen);
 }
