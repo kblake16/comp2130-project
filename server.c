@@ -15,7 +15,7 @@ Labu Beckford       620111107
 #include <ctype.h>
 
 #define BUF_SIZE	2048
-#define LISTEN_PORT	60000
+#define LISTEN_PORT	60020
 
 int main(int argc, char *argv[])
 {
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
     //Create Messages
     char * menu()
     {
-        char * send = "\nEnter a Cell Example:a1 [Type 'shutdown' at any time to quit]!105";
+        char * send = "\nEnter a Cell Example:a1 [Type 'shutdown' at any time to exit]!105";
         return send;
     }
 
@@ -189,16 +189,16 @@ int main(int argc, char *argv[])
     {
          if (strstr(msg,"shutdown"))
         {
-            bytes_sent = send(s,"quit",BUF_SIZE,0);
+            bytes_sent = send(s,"!quit",BUF_SIZE,0);
             status = -1;
         }
-        else if(strstr(msg,"100"))
+        else if(strstr(msg,"!100"))
         {
             msg = spreadSheet();
             strcat(msg,menu());
             bytes_sent = send(s,msg,BUF_SIZE,0);
         }
-        else if(strstr(msg,"115"))
+        else if(strstr(msg,"!115"))
         {
             strcpy(msg,strtok(msg,"!"));
 
@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
                 bytes_sent = send(s,msg,BUF_SIZE,0);
             }
         }
-        else if(strstr(msg,"150"))
+        else if(strstr(msg,"!150"))
         {
             strcpy(msg,strtok(msg,"!"));
             printf("Val: %s",msg);

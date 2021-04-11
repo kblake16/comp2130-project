@@ -18,7 +18,7 @@ Labu Beckford       620111107
 
 #define BUF_SIZE	2048
 #define	SERVER_IP	"127.0.0.1"
-#define SERVER_PORT	60000
+#define SERVER_PORT	60020
 
 int main(int argc, char *argv[]){
     int	sock_send;
@@ -46,18 +46,18 @@ int main(int argc, char *argv[]){
 
     void processMessage(int s, char msg[BUF_SIZE])
     {
-        if (strstr(msg,"quit"))
+        if (strstr(msg,"!quit"))
         {
             status = -1;
         }
-        if(strstr(msg,"105"))
+        if(strstr(msg,"!105"))
         {
             printf("%s",strtok(msg,"!"));
             printf("\nSend? ");
             scanf("%s",msg);
             bytes_sent=send(s,option(msg),BUF_SIZE,0);
         }
-        if(strstr(msg,"125"))
+        if(strstr(msg,"!125"))
         {
             printf("%s",strtok(msg,"!"));
             printf("\nSend? ");
